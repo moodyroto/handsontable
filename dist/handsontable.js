@@ -24,7 +24,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * 
  * Version: 0.38.0
- * Release date: 14/03/2018 (built at 12/03/2018 15:07:01)
+ * Release date: 14/03/2018 (built at 16/03/2018 15:05:06)
  */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
@@ -10839,6 +10839,9 @@ function Core(rootElement, userSettings) {
     var isNumericData = function isNumericData(value) {
       return value.length > 0 && /^-?[\d\s]*(\.|,)?\d*$/.test(value);
     };
+    var isScientificNotationData = function isScientificNotationData(value) {
+      return value.length > 0 && /([+-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+-]?\d+))$/.test(value);
+    };
 
     waitingForValidator.onQueueEmpty = resolve;
 
@@ -10854,7 +10857,7 @@ function Core(rootElement, userSettings) {
         var col = datamap.propToCol(prop);
         var cellProperties = instance.getCellMeta(row, col);
 
-        if (cellProperties.type === 'numeric' && typeof newValue === 'string' && isNumericData(newValue)) {
+        if (cellProperties.type === 'numeric' && typeof newValue === 'string' && (isNumericData(newValue) || isScientificNotationData(newValue))) {
           changes[i][3] = getParsedNumber(newValue);
         }
 
@@ -28364,7 +28367,7 @@ Handsontable.DefaultSettings = _defaultSettings2.default;
 Handsontable.EventManager = _eventManager2.default;
 Handsontable._getListenersCounter = _eventManager.getListenersCounter; // For MemoryLeak tests
 
-Handsontable.buildDate = '12/03/2018 15:07:01';
+Handsontable.buildDate = '16/03/2018 15:05:06';
 Handsontable.packageName = 'handsontable';
 Handsontable.version = '0.38.0';
 
@@ -30776,7 +30779,7 @@ module.exports = __WEBPACK_EXTERNAL_MODULE_233__;
 /* 234 */
 /***/ (function(module, exports) {
 
-
+// removed by extract-text-webpack-plugin
 
 /***/ }),
 /* 235 */
@@ -31795,10 +31798,15 @@ function numericRenderer(instance, TD, row, col, prop, value, cellProperties) {
     var cellCulture = numericFormat && numericFormat.culture;
     var cellFormatPattern = numericFormat && numericFormat.pattern;
     var className = cellProperties.className || '';
+    var scientificNotationRegex = /([+-]?(?:0|[1-9]\d*)(?:\.\d*)?(?:[eE][+-]?\d+))$/;
     var classArr = className.length ? className.split(' ') : [];
 
     if (typeof cellCulture !== 'undefined') {
       _numbro2.default.culture(cellCulture);
+    }
+
+    if (typeof value === 'string' && scientificNotationRegex.test(value)) {
+      value = parseFloat(value);
     }
 
     value = (0, _numbro2.default)(value).format(cellFormatPattern || '0');
@@ -54063,7 +54071,7 @@ UndoRedo.RemoveColumnAction.prototype.undo = function (instance, undoneCallback)
   var changes = [];
 
   // TODO: Temporary hook for undo/redo mess
-  instance.runHooks('beforeCreateCol', this.indexes[0], this.indexes[this.indexes.length - 1], 'UndoRedo.undo');
+  instance.runHooks('beforeCreateCol', this.indexes[0], this.indexes.length, 'UndoRedo.undo');
 
   (0, _number.rangeEach)(this.data.length - 1, function (i) {
     row = instance.getSourceDataAtRow(i);
@@ -54092,7 +54100,7 @@ UndoRedo.RemoveColumnAction.prototype.undo = function (instance, undoneCallback)
   instance.addHookOnce('afterRender', undoneCallback);
 
   // TODO: Temporary hook for undo/redo mess
-  instance.runHooks('afterCreateCol', this.indexes[0], this.indexes[this.indexes.length - 1], 'UndoRedo.undo');
+  instance.runHooks('afterCreateCol', this.indexes[0], this.indexes.length, 'UndoRedo.undo');
 
   if (instance.getPlugin('formulas')) {
     instance.getPlugin('formulas').recalculateFull();
